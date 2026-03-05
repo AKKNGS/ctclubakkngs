@@ -1,0 +1,38 @@
+:root {
+    --primary: #4A90E2;
+    --bg-color: #f4f7f6;
+    --text-color: #333;
+    --card-bg: #ffffff;
+}
+
+* { box-sizing: border-box; font-family: 'Kantumruy Pro', 'Khmer OS Battambang', sans-serif; }
+
+body { margin: 0; background-color: var(--bg-color); color: var(--text-color); }
+
+.container { display: none; padding: 20px; max-width: 1000px; margin: auto; }
+.container.active { display: block; }
+
+.card { background: var(--card-bg); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.login-card { max-width: 400px; margin: 100px auto; text-align: center; }
+
+input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: 0.3s; }
+button:hover { background: #357ABD; }
+
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.logout-btn { width: auto; background: #e74c3c; padding: 10px 20px; }
+
+.table-responsive { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 600px; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background-color: #f8f9fa; }
+
+.edit-btn { background: #f39c12; padding: 6px 12px; font-size: 14px; width: auto; }
+
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+.modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+.cancel-btn { background: #95a5a6; }
+
+.error { color: red; font-size: 14px; }
+.loading { text-align: center; padding: 20px; font-weight: bold; }

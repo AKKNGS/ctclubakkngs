@@ -1,0 +1,15 @@
+{
+  "name": "ប្រព័ន្ធគ្រប់គ្រងសិស្ស",
+  "short_name": "បញ្ជីសិស្ស",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4A90E2",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
