@@ -3,7 +3,7 @@
  ***********************/
 
 // 1) PUT your Apps Script Web App URL here:
-const API_URL = "https://script.google.com/macros/s/AKfycbyX__TvTzq0cyrVnV7MTHwOz_0kigHULkjZPb3MpUyFy75f-EEAil5r6CS8cV3YPC4y/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxCYfcCKkP4aK53dikRLFqv43ELokP3WkmIL8ruxCPQTyVz9gDNZCcszizEah8fVc2Y/exec";
 
 const $ = (id) => document.getElementById(id);
 
@@ -286,3 +286,4 @@ $("btnInstall").addEventListener("click", async () => {
   renderRole();
   await loadData();
 })();
+
