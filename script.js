@@ -1,118 +1,288 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyX__TvTzq0cyrVnV7MTHwOz_0kigHULkjZPb3MpUyFy75f-EEAil5r6CS8cV3YPC4y/exec'; 
-let isAdmin = false; // បិទសិទ្ធិ Admin ជា Default
-let studentData = [];
+/***********************
+ * Frontend for Vercel
+ ***********************/
 
-// ទាញយកទិន្នន័យពេលបើក App ភ្លាម
-document.addEventListener('DOMContentLoaded', loadData);
+// 1) PUT your Apps Script Web App URL here:
+const API_URL = "https://script.google.com/macros/s/AKfycbyX__TvTzq0cyrVnV7MTHwOz_0kigHULkjZPb3MpUyFy75f-EEAil5r6CS8cV3YPC4y/exec";
 
-async function loadData() {
-    document.getElementById('loading').style.display = 'flex';
-    document.getElementById('student-list').innerHTML = '';
-    try {
-        const response = await fetch(SCRIPT_URL);
-        studentData = await response.json();
-        renderData();
-    } catch (e) {
-        document.getElementById('loading').innerHTML = '<span class="material-symbols-outlined">error</span> មានបញ្ហាក្នុងការទាញទិន្នន័យ';
+const $ = (id) => document.getElementById(id);
+
+let session = {
+  token: localStorage.getItem("token") || "",
+  role: localStorage.getItem("role") || "",
+  displayName: localStorage.getItem("displayName") || ""
+};
+
+let cached = { headers: [], rows: [] };
+let deferredPrompt = null;
+
+function setMsg(el, text, type) {
+  el.classList.remove("error", "ok");
+  if (!text) { el.textContent = ""; return; }
+  el.textContent = text;
+  if (type) el.classList.add(type);
+}
+
+function show(view) {
+  ["viewLogin","viewHome","viewAccount"].forEach(v => $(v).classList.add("hidden"));
+  $(view).classList.remove("hidden");
+
+  const loggedIn = !!session.token;
+  $("btnLogout").classList.toggle("hidden", !loggedIn);
+  $("bottomNav").classList.toggle("hidden", !loggedIn);
+}
+
+function setNavActive(which){
+  document.querySelectorAll(".navBtn").forEach(b => b.classList.remove("active"));
+  document.querySelector(`.navBtn[data-go="${which}"]`)?.classList.add("active");
+}
+
+async function api(action, payload = {}) {
+  // We use no-cors fallback behavior by sending JSON and reading response normally.
+  // If your deployment returns readable JSON, this works in most cases.
+  const body = { action, ...payload };
+  if (session.token) body.token = session.token;
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!data) throw new Error("NETWORK_OR_CORS_ERROR");
+  if (data.status !== "ok") throw new Error(data.error || "ERROR");
+  return data;
+}
+
+function isAdmin(){ return session.role === "admin"; }
+
+function persistSession(s) {
+  session = { ...session, ...s };
+  localStorage.setItem("token", session.token || "");
+  localStorage.setItem("role", session.role || "");
+  localStorage.setItem("displayName", session.displayName || "");
+}
+
+function clearSession(){
+  session = { token:"", role:"", displayName:"" };
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("displayName");
+}
+
+function renderRole(){
+  $("roleBadge").textContent = isAdmin() ? "Role: Admin (Edit Enabled)" : "Role: User (View Only)";
+  $("accountRole").textContent = isAdmin() ? "Admin" : "User";
+  $("btnAdd").classList.toggle("hidden", !isAdmin());
+}
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, (m) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+function matchesSearch(values, q){
+  if (!q) return true;
+  const hay = values.map(v => String(v ?? "")).join(" ").toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+
+function renderTable() {
+  const { headers, rows } = cached;
+  const q = $("searchInput").value.trim();
+
+  // Head
+  const headCells = headers.map(h => `<th>${escapeHtml(h)}</th>`).join("");
+  const actionsTh = isAdmin() ? `<th class="actionsCell">Actions</th>` : "";
+  $("tableHead").innerHTML = `<tr>${headCells}${actionsTh}</tr>`;
+
+  // Body
+  const filtered = rows.filter(r => matchesSearch(r.values, q));
+  $("stats").textContent = `Rows: ${filtered.length} / ${rows.length}`;
+
+  const body = filtered.map(r => {
+    const tds = r.values.map(v => `<td>${escapeHtml(v)}</td>`).join("");
+    const actions = isAdmin()
+      ? `<td class="actionsCell">
+          <button class="btn" data-edit="${r.rowNumber}">Edit</button>
+        </td>`
+      : "";
+    return `<tr>${tds}${actions}</tr>`;
+  }).join("");
+
+  $("tableBody").innerHTML = body || `<tr><td colspan="${headers.length + (isAdmin()?1:0)}" class="muted">No data</td></tr>`;
+}
+
+async function loadData(){
+  setMsg($("homeMsg"), "Loading...", "");
+  try{
+    const res = await api("getData");
+    cached = res.data;
+    renderRole();
+    renderTable();
+    setMsg($("homeMsg"), "Updated ✅", "ok");
+  }catch(err){
+    setMsg($("homeMsg"), `Error: ${err.message}`, "error");
+  }
+}
+
+function openModal({ mode, rowNumber, values }){
+  $("modal").classList.remove("hidden");
+  setMsg($("modalMsg"), "", "");
+  $("btnDelete").classList.toggle("hidden", mode !== "edit");
+  $("modalTitle").textContent = mode === "add" ? "Add Row" : "Edit Row";
+  $("modalSubtitle").textContent = mode === "add"
+    ? "បន្ថែមទិន្នន័យថ្មី"
+    : `កែទិន្នន័យ (row: ${rowNumber})`;
+
+  const { headers } = cached;
+  const form = $("rowForm");
+  form.innerHTML = headers.map((h, i) => {
+    const val = values?.[i] ?? "";
+    return `
+      <label class="field">
+        <span>${escapeHtml(h)}</span>
+        <input data-col="${i}" value="${escapeHtml(val)}" />
+      </label>
+    `;
+  }).join("");
+
+  $("btnSave").onclick = async () => {
+    const inputs = Array.from(form.querySelectorAll("input"));
+    const newValues = inputs.map(inp => inp.value);
+
+    setMsg($("modalMsg"), "Saving...", "");
+    try{
+      if (mode === "add") {
+        await api("addRow", { values: newValues });
+      } else {
+        await api("updateRow", { rowNumber, values: newValues });
+      }
+      setMsg($("modalMsg"), "Saved ✅", "ok");
+      await loadData();
+      closeModalSoon();
+    }catch(err){
+      setMsg($("modalMsg"), `Error: ${err.message}`, "error");
     }
-}
+  };
 
-function renderData() {
-    const list = document.getElementById('student-list');
-    list.innerHTML = '';
-    document.getElementById('loading').style.display = 'none';
-
-    studentData.forEach(row => {
-        // កាត់ចោលជួរ (Rows) ណាដែលគ្មានឈ្មោះ ដើម្បីកុំឱ្យលោតផ្ទាំងទទេដូចក្នុងរូបរបស់អ្នក
-        if (!row['ឈ្មោះ'] || row['ឈ្មោះ'].trim() === "") return; 
-
-        const card = document.createElement('div');
-        card.className = 'student-card';
-        
-        let html = `
-            <div class="student-info">
-                <h3>${row['លរ']}. ${row['ឈ្មោះ']}</h3>
-                <p>ថ្នាក់: <b>${row['ថ្នាក់']}</b> | ភេទ: <b>${row['ភេទ']}</b></p>
-                <p class="note">${row['កំណត់សម្គាល់']}</p>
-            </div>
-        `;
-
-        // បង្ហាញប៊ូតុងកែប្រែ លុះត្រាតែបាន Login រួច
-        if (isAdmin) {
-            html += `
-                <button class="edit-action-btn" onclick="openEditModal('${row['លរ']}', '${row['ឈ្មោះ']}', '${row['ភេទ']}', '${row['ថ្នាក់']}', '${row['កំណត់សម្គាល់']}')">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">edit</span> កែប្រែ
-                </button>
-            `;
-        }
-
-        card.innerHTML = html;
-        list.appendChild(card);
-    });
-}
-
-// ------ មុខងារគ្រប់គ្រងគណនី (Login) ------
-function toggleLoginModal() {
-    if (isAdmin) {
-        // បើមានសិទ្ធិហើយ ចុចប៊ូតុងម្តងទៀតគឺ Logout
-        isAdmin = false;
-        document.getElementById('auth-icon').innerText = 'login';
-        renderData(); // Render ថ្មីដើម្បីលាក់ប៊ូតុងកែប្រែ
-    } else {
-        document.getElementById('login-modal').style.display = 'flex';
+  $("btnDelete").onclick = async () => {
+    if (!confirm("Delete this row?")) return;
+    setMsg($("modalMsg"), "Deleting...", "");
+    try{
+      await api("deleteRow", { rowNumber });
+      setMsg($("modalMsg"), "Deleted ✅", "ok");
+      await loadData();
+      closeModalSoon();
+    }catch(err){
+      setMsg($("modalMsg"), `Error: ${err.message}`, "error");
     }
+  };
 }
 
-function login() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
-    
-    if (user === 'admin' && pass === '1234') {
-        isAdmin = true;
-        document.getElementById('auth-icon').innerText = 'logout'; // ប្តូរ Icon ទៅ Logout
-        document.getElementById('login-modal').style.display = 'none';
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        document.getElementById('login-error').innerText = '';
-        renderData(); // Render ថ្មីដើម្បីបង្ហាញប៊ូតុងកែប្រែ
-    } else {
-        document.getElementById('login-error').innerText = "ឈ្មោះ ឬ លេខសម្ងាត់ខុស!";
+function closeModalSoon(){
+  setTimeout(() => $("modal").classList.add("hidden"), 500);
+}
+
+function closeModal(){
+  $("modal").classList.add("hidden");
+}
+
+// Events
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  setMsg($("loginMsg"), "Logging in...", "");
+
+  try{
+    const username = $("username").value.trim();
+    const password = $("password").value;
+
+    const res = await api("login", { username, password });
+    persistSession(res.data);
+
+    $("loginMsg").textContent = "";
+    show("viewHome");
+    setNavActive("home");
+    await loadData();
+  }catch(err){
+    setMsg($("loginMsg"), `Login failed: ${err.message}`, "error");
+  }
+});
+
+$("btnLogout").addEventListener("click", () => {
+  clearSession();
+  cached = { headers: [], rows: [] };
+  show("viewLogin");
+  setMsg($("loginMsg"), "Logged out.", "ok");
+});
+
+$("btnRefresh").addEventListener("click", loadData);
+
+$("searchInput").addEventListener("input", () => renderTable());
+
+$("tableBody").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-edit]");
+  if (!btn) return;
+  const rowNumber = Number(btn.dataset.edit);
+  const row = cached.rows.find(r => r.rowNumber === rowNumber);
+  if (!row) return;
+  openModal({ mode:"edit", rowNumber, values: row.values });
+});
+
+$("btnAdd").addEventListener("click", () => {
+  openModal({ mode:"add", rowNumber:null, values: Array(cached.headers.length).fill("") });
+});
+
+$("btnCloseModal").addEventListener("click", closeModal);
+$("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeModal(); });
+
+// Bottom nav
+document.querySelectorAll(".navBtn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const go = btn.dataset.go;
+    setNavActive(go);
+
+    if (go === "home") {
+      show("viewHome");
+      if (!cached.headers.length) await loadData();
+    } else if (go === "account") {
+      show("viewAccount");
+      renderRole();
     }
+  });
+});
+
+// PWA: service worker + install prompt
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/public/sw.js").catch(() => {});
+  });
 }
 
-// ------ មុខងារកែប្រែ (Edit) ------
-function openEditModal(id, name, gender, className, note) {
-    document.getElementById('edit-id').value = id;
-    document.getElementById('edit-name').value = name;
-    document.getElementById('edit-gender').value = gender;
-    document.getElementById('edit-class').value = className;
-    document.getElementById('edit-note').value = note;
-    document.getElementById('edit-modal').style.display = 'flex';
-}
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  $("btnInstall").classList.remove("hidden");
+});
 
-function closeEditModal() {
-    document.getElementById('edit-modal').style.display = 'none';
-}
+$("btnInstall").addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt = null;
+  $("btnInstall").classList.add("hidden");
+});
 
-async function saveData() {
-    const btn = document.querySelector('.save-btn');
-    btn.innerText = "កំពុងរក្សាទុក...";
-    
-    const formData = new URLSearchParams();
-    formData.append('action', 'update');
-    formData.append('id', document.getElementById('edit-id').value);
-    formData.append('name', document.getElementById('edit-name').value);
-    formData.append('gender', document.getElementById('edit-gender').value);
-    formData.append('className', document.getElementById('edit-class').value);
-    formData.append('note', document.getElementById('edit-note').value);
-
-    try {
-        await fetch(SCRIPT_URL, { method: 'POST', body: formData });
-        closeEditModal();
-        loadData(); // ទាញទិន្នន័យថ្មី
-    } catch (e) {
-        alert('មានបញ្ហាក្នុងការរក្សាទុកទិន្នន័យ');
-    }
-    btn.innerText = "រក្សាទុក";
-}
-
+// Init
+(async function init(){
+  const loggedIn = !!session.token;
+  if (!loggedIn) {
+    show("viewLogin");
+    return;
+  }
+  show("viewHome");
+  setNavActive("home");
+  renderRole();
+  await loadData();
+})();
