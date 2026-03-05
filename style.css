@@ -4,7 +4,7 @@
   --card2:#111c33;
   --text:#e5e7eb;
   --muted:#9ca3af;
-  --line:rgba(255,255,255,.08);
+  --line:rgba(255,255,255,.10);
   --primary:#22c55e;
   --danger:#ef4444;
   --shadow: 0 20px 60px rgba(0,0,0,.35);
@@ -28,7 +28,6 @@ a:hover{text-decoration:underline}
 
 .app{min-height:100%; display:flex; flex-direction:column}
 .view{padding:18px; max-width:1100px; width:100%; margin:0 auto 90px}
-
 .hidden{display:none !important}
 
 .topbar{
@@ -36,18 +35,30 @@ a:hover{text-decoration:underline}
   display:flex; justify-content:space-between; align-items:center;
   padding:14px 18px;
   border-bottom:1px solid var(--line);
-  background:rgba(11,18,32,.72);
+  background:rgba(9,14,26,.78);
   backdrop-filter: blur(12px);
 }
 
 .brand{display:flex; align-items:center; gap:12px}
-.logo{width:42px;height:42px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-.brandTitle{font-weight:800;letter-spacing:.2px}
+.brandTitle{font-weight:900;letter-spacing:.2px}
 .brandSub{color:var(--muted);font-size:12px;margin-top:2px}
 
+.logo{
+  width:46px;height:46px;
+  border-radius:14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  padding:6px;
+  object-fit: contain;
+  box-shadow:
+    0 12px 30px rgba(0,0,0,.35),
+    0 0 0 6px rgba(34,197,94,.10),
+    0 0 28px rgba(34,197,94,.22);
+}
+
 .card{
-  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-  border:1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.12);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding:16px;
@@ -56,7 +67,7 @@ a:hover{text-decoration:underline}
 .authCard{max-width:460px;margin:24px auto 0}
 .h1{margin:0 0 8px;font-size:28px}
 .h2{margin:0 0 10px;font-size:20px}
-.h3{font-weight:800;font-size:16px}
+.h3{font-weight:900;font-size:16px}
 
 .muted{color:var(--muted)}
 .small{font-size:12px}
@@ -68,18 +79,22 @@ a:hover{text-decoration:underline}
 .wrap{flex-wrap:wrap}
 
 .btn{
-  border:1px solid var(--line);
-  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
   color:var(--text);
   padding:10px 12px;
   border-radius:14px;
   cursor:pointer;
   transition: transform .08s ease, background .15s ease;
-  font-weight:700;
+  font-weight:800;
 }
-.btn:hover{background:rgba(255,255,255,.07)}
+.btn:hover{background:rgba(255,255,255,.08)}
 .btn:active{transform:translateY(1px)}
-.btn.primary{background:rgba(34,197,94,.15); border-color: rgba(34,197,94,.35)}
+.btn.primary{
+  background: linear-gradient(180deg, rgba(34,197,94,.25), rgba(34,197,94,.12));
+  border-color: rgba(34,197,94,.40);
+  box-shadow: 0 10px 24px rgba(34,197,94,.12);
+}
 .btn.primary:hover{background:rgba(34,197,94,.22)}
 .btn.danger{background:rgba(239,68,68,.14); border-color: rgba(239,68,68,.35)}
 .btn.danger:hover{background:rgba(239,68,68,.22)}
@@ -92,7 +107,7 @@ input{
   width:100%;
   padding:12px 12px;
   border-radius:14px;
-  border:1px solid var(--line);
+  border:1px solid rgba(255,255,255,.12);
   background: rgba(0,0,0,.18);
   color:var(--text);
   outline:none;
@@ -108,7 +123,7 @@ input:focus{border-color: rgba(34,197,94,.45); box-shadow:0 0 0 4px rgba(34,197,
   font-size:12px;
   color: #cbd5e1;
   background: rgba(255,255,255,.04);
-  border:1px solid var(--line);
+  border:1px solid rgba(255,255,255,.10);
   padding:6px 10px;
   border-radius: 999px;
 }
@@ -117,7 +132,7 @@ input:focus{border-color: rgba(34,197,94,.45); box-shadow:0 0 0 4px rgba(34,197,
   display:inline-flex; align-items:center; gap:8px;
   font-size:12px; color:#cbd5e1;
   padding:6px 10px; border-radius:999px;
-  border:1px solid var(--line);
+  border:1px solid rgba(255,255,255,.10);
   background: rgba(255,255,255,.03);
 }
 
@@ -128,13 +143,13 @@ input:focus{border-color: rgba(34,197,94,.45); box-shadow:0 0 0 4px rgba(34,197,
   margin-top:14px;
   border-radius: 16px;
   overflow:auto;
-  border:1px solid var(--line);
+  border:1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.12);
 }
 .table{width:100%; border-collapse:collapse; min-width:720px}
 .table th, .table td{
   padding:12px 10px;
-  border-bottom:1px solid var(--line);
+  border-bottom:1px solid rgba(255,255,255,.08);
   text-align:left;
   font-size:13px;
   vertical-align:top;
@@ -148,37 +163,35 @@ input:focus{border-color: rgba(34,197,94,.45); box-shadow:0 0 0 4px rgba(34,197,
 }
 .table tr:hover td{background: rgba(255,255,255,.03)}
 .actionsCell{white-space:nowrap}
-.chip{
-  display:inline-flex;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background: rgba(255,255,255,.03);
-  font-size:12px;
-  color:#e5e7eb;
-}
 
 .bottomNav{
   position:fixed; left:0; right:0; bottom:0; z-index:20;
   display:flex;
-  border-top:1px solid var(--line);
-  background: rgba(11,18,32,.78);
+  padding: 10px 10px 14px;
+  gap: 10px;
+  border-top:1px solid rgba(255,255,255,.10);
+  background: rgba(9,14,26,.70);
   backdrop-filter: blur(12px);
 }
 .navBtn{
   flex:1;
   padding:12px 10px;
   background:transparent;
-  border:none;
+  border:1px solid transparent;
   color:#cbd5e1;
   display:flex;
   flex-direction:column;
   align-items:center;
   gap:4px;
   cursor:pointer;
+  border-radius: 16px;
 }
 .navBtn .ico{font-size:18px}
-.navBtn.active{color:#86efac}
+.navBtn.active{
+  color:#86efac;
+  background: rgba(34,197,94,.12);
+  border: 1px solid rgba(34,197,94,.25);
+}
 
 .modal{
   position:fixed; inset:0; z-index:30;
@@ -191,7 +204,7 @@ input:focus{border-color: rgba(34,197,94,.45); box-shadow:0 0 0 4px rgba(34,197,
 .modalCard{
   width:min(860px, 100%);
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-  border:1px solid var(--line);
+  border:1px solid rgba(255,255,255,.12);
   border-radius: 22px;
   box-shadow: var(--shadow);
   padding:16px;
@@ -212,78 +225,14 @@ input:focus{border-color: rgba(34,197,94,.45); box-shadow:0 0 0 4px rgba(34,197,
 }
 .infoItem{
   padding:12px;
-  border:1px solid var(--line);
+  border:1px solid rgba(255,255,255,.10);
   border-radius:16px;
   background: rgba(255,255,255,.03);
 }
 .infoItem .k{font-size:12px;color:var(--muted)}
-.infoItem .v{margin-top:6px;font-weight:800}
+.infoItem .v{margin-top:6px;font-weight:900}
 
-@media (max-width:720px){
-  .view{padding:14px}
-  .brandSub{display:none}
-  .modal{align-items:flex-end}
-  .infoGrid{grid-template-columns: 1fr}
-  .table{min-width: 680px}
-}
-
-
-/* ====== UI Upgrade Pack ====== */
-
-/* Make logo always visible + glow */
-.logo{
-  width:46px;height:46px;
-  border-radius:14px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.10);
-  padding:6px;
-  box-shadow:
-    0 12px 30px rgba(0,0,0,.35),
-    0 0 0 6px rgba(34,197,94,.10),
-    0 0 28px rgba(34,197,94,.22);
-  object-fit: contain;
-}
-
-/* Better topbar look */
-.topbar{
-  border-bottom: 1px solid rgba(255,255,255,.10);
-  background: rgba(9,14,26,.78);
-}
-
-/* Card polish */
-.card{
-  border: 1px solid rgba(255,255,255,.10);
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-}
-
-/* Buttons feel more app-like */
-.btn{
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.05);
-}
-.btn.primary{
-  background: linear-gradient(180deg, rgba(34,197,94,.25), rgba(34,197,94,.12));
-  border-color: rgba(34,197,94,.40);
-  box-shadow: 0 10px 24px rgba(34,197,94,.12);
-}
-
-/* Bottom nav: app style with blur + floating feel */
-.bottomNav{
-  padding: 10px 10px 14px;
-  gap: 10px;
-  background: rgba(9,14,26,.70);
-  border-top: 1px solid rgba(255,255,255,.10);
-}
-.navBtn{
-  border-radius: 16px;
-  padding: 10px 10px;
-}
-.navBtn.active{
-  background: rgba(34,197,94,.12);
-  border: 1px solid rgba(34,197,94,.25);
-}
-
-/* Splash screen */
+/* Splash */
 .splash{
   position: fixed;
   inset: 0;
@@ -320,7 +269,6 @@ input:focus{border-color: rgba(34,197,94,.45); box-shadow:0 0 0 4px rgba(34,197,
   margin-top: 12px;
   font-size: 26px;
   font-weight: 900;
-  letter-spacing: .2px;
 }
 .splashSub{
   margin-top: 6px;
@@ -349,6 +297,12 @@ input:focus{border-color: rgba(34,197,94,.45); box-shadow:0 0 0 4px rgba(34,197,
   50%{ transform: translateX(120%); opacity:1;}
   100%{ transform: translateX(-20%); opacity:.55;}
 }
-
-/* Hide splash when ready */
 .splash.hide{ display:none; }
+
+@media (max-width:720px){
+  .view{padding:14px}
+  .brandSub{display:none}
+  .modal{align-items:flex-end}
+  .infoGrid{grid-template-columns: 1fr}
+  .table{min-width: 680px}
+}
