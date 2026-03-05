@@ -2,64 +2,72 @@
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ប្រព័ន្ធគ្រប់គ្រងសិស្ស</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4A90E2">
+    <meta name="theme-color" content="#2563eb">
 </head>
 <body>
 
-    <div id="login-container" class="container active">
-        <div class="card login-card">
-            <h2>ចូលប្រើប្រាស់ (Login)</h2>
-            <input type="text" id="username" placeholder="ឈ្មោះគណនី (admin)">
-            <input type="password" id="password" placeholder="លេខសម្ងាត់ (1234)">
-            <button onclick="login()">ចូល (Login)</button>
-            <p id="login-error" class="error"></p>
+    <header class="app-header">
+        <div class="logo-title">
+            <span class="material-symbols-outlined">school</span>
+            <h1>បញ្ជីសិស្ស</h1>
         </div>
-    </div>
+        <button id="auth-btn" class="icon-btn" onclick="toggleLoginModal()">
+            <span class="material-symbols-outlined" id="auth-icon">login</span>
+        </button>
+    </header>
 
-    <div id="dashboard-container" class="container">
-        <div class="header">
-            <h2>ទិន្នន័យសិស្ស (Admin)</h2>
-            <button class="logout-btn" onclick="logout()">ចាកចេញ</button>
+    <main class="app-content">
+        <div id="loading" class="loading">
+            <span class="material-symbols-outlined spin">sync</span> កំពុងទាញយកទិន្នន័យ...
         </div>
         
-        <div class="card table-responsive">
-            <table id="data-table">
-                <thead>
-                    <tr>
-                        <th>លរ</th>
-                        <th>ឈ្មោះ</th>
-                        <th>ភេទ</th>
-                        <th>ថ្នាក់</th>
-                        <th>កំណត់សម្គាល់</th>
-                        <th>សកម្មភាព</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    </tbody>
-            </table>
-            <div id="loading" class="loading">កំពុងទាញយកទិន្នន័យ...</div>
+        <div id="student-list" class="card-list"></div>
+    </main>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>ចូលប្រើប្រាស់ (Admin)</h2>
+                <button class="close-btn" onclick="toggleLoginModal()"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <span class="material-symbols-outlined">person</span>
+                    <input type="text" id="username" placeholder="ឈ្មោះគណនី">
+                </div>
+                <div class="input-group">
+                    <span class="material-symbols-outlined">lock</span>
+                    <input type="password" id="password" placeholder="លេខសម្ងាត់">
+                </div>
+                <p id="login-error" class="error-msg"></p>
+                <button class="primary-btn" onclick="login()">ចូល (Login)</button>
+            </div>
         </div>
     </div>
 
     <div id="edit-modal" class="modal">
-        <div class="modal-content">
-            <h3>កែប្រែទិន្នន័យ</h3>
-            <input type="hidden" id="edit-id">
-            <label>ឈ្មោះ៖</label>
-            <input type="text" id="edit-name">
-            <label>ភេទ៖</label>
-            <input type="text" id="edit-gender">
-            <label>ថ្នាក់៖</label>
-            <input type="text" id="edit-class">
-            <label>កំណត់សម្គាល់៖</label>
-            <input type="text" id="edit-note">
-            <div class="modal-actions">
-                <button onclick="saveData()" class="save-btn">រក្សាទុក</button>
-                <button onclick="closeModal()" class="cancel-btn">បោះបង់</button>
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>កែប្រែព័ត៌មាន</h2>
+                <button class="close-btn" onclick="closeEditModal()"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-id">
+                <div class="input-box"><label>ឈ្មោះ៖</label><input type="text" id="edit-name"></div>
+                <div class="input-box"><label>ភេទ៖</label><input type="text" id="edit-gender"></div>
+                <div class="input-box"><label>ថ្នាក់៖</label><input type="text" id="edit-class"></div>
+                <div class="input-box"><label>កំណត់សម្គាល់៖</label><input type="text" id="edit-note"></div>
+                
+                <div class="modal-actions">
+                    <button class="cancel-btn" onclick="closeEditModal()">បោះបង់</button>
+                    <button class="save-btn" onclick="saveData()">រក្សាទុក</button>
+                </div>
             </div>
         </div>
     </div>
