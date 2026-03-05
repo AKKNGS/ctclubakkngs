@@ -1,13 +1,13 @@
 {
-  "name": "ប្រព័ន្ធគ្រប់គ្រងសិស្ស",
-  "short_name": "បញ្ជីសិស្ស",
-  "start_url": "/index.html",
+  "name": "CT Club Data",
+  "short_name": "CT Club",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4A90E2",
+  "background_color": "#0b1220",
+  "theme_color": "#111827",
   "icons": [
     {
-      "src": "logo.png",
+      "src": "/public/logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
