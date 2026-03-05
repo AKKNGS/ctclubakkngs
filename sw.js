@@ -1,12 +1,12 @@
-const CACHE_NAME = "ctclub-v1";
+const CACHE_NAME = "ctclub-v3";
 const ASSETS = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/script.js",
-  "/public/manifest.json",
-  "/public/logo.png",
-  "/public/sw.js"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./script.js",
+  "./manifest.json",
+  "./logo.png",
+  "./sw.js"
 ];
 
 self.addEventListener("install", (event) => {
@@ -27,13 +27,13 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Network-first for API (Apps Script)
+  // Network-first for Apps Script API
   if (url.href.includes("script.google.com")) {
-    event.respondWith(fetch(req).catch(() => caches.match("/index.html")));
+    event.respondWith(fetch(req).catch(() => caches.match("./index.html")));
     return;
   }
 
-  // Cache-first for static assets
+  // Cache-first for static
   event.respondWith(
     caches.match(req).then(cached => cached || fetch(req).then(resp => {
       const copy = resp.clone();
