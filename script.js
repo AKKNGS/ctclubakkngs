@@ -1,5 +1,6 @@
 /***********************
- * Frontend for Vercel
+ * Frontend for CT Club
+ * Optimized for Modern UI
  ***********************/
 
 const API_URL = "https://script.google.com/macros/s/AKfycbxCYfcCKkP4aK53dikRLFqv43ELokP3WkmIL8ruxCPQTyVz9gDNZCcszizEah8fVc2Y/exec";
@@ -15,15 +16,18 @@ let session = {
 let cached = { headers: [], rows: [] };
 let deferredPrompt = null;
 
+// បង្ហាញសារជូនដំណឹង (Error/Success)
 function setMsg(el, text, type) {
+  if (!el) return;
   el.classList.remove("error", "ok");
   if (!text) { el.textContent = ""; return; }
   el.textContent = text;
   if (type) el.classList.add(type);
 }
 
+// ប្តូរ View (Login, Home, Account)
 function show(view) {
-  ["viewLogin","viewHome","viewAccount"].forEach(v => $(v).classList.add("hidden"));
+  ["viewLogin", "viewHome", "viewAccount"].forEach(v => $(v).classList.add("hidden"));
   $(view).classList.remove("hidden");
 
   const loggedIn = !!session.token;
@@ -31,43 +35,48 @@ function show(view) {
   $("bottomNav").classList.toggle("hidden", !loggedIn);
 }
 
-function setNavActive(which){
+function setNavActive(which) {
   document.querySelectorAll(".navBtn").forEach(b => b.classList.remove("active"));
   document.querySelector(`.navBtn[data-go="${which}"]`)?.classList.add("active");
 }
 
-function hideSplash(){
+function hideSplash() {
   const s = $("splash");
-  if (s) s.classList.add("hide");
-}
-function showSplash(){
-  const s = $("splash");
-  if (s) s.classList.remove("hide");
+  if (s) {
+    s.style.opacity = "0";
+    setTimeout(() => s.classList.add("hide"), 500); // បិទដោយមាន Effect ស្រទន់
+  }
 }
 
+function showSplash() {
+  const s = $("splash");
+  if (s) {
+    s.classList.remove("hide");
+    s.style.opacity = "1";
+  }
+}
+
+// មុខងារហៅទៅកាន់ Google Apps Script API
 async function api(action, payload = {}) {
   const body = { action, ...payload };
   if (session.token) body.token = session.token;
 
-  const res = await fetch(API_URL, {
-    method: "POST",
-    redirect: "follow",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(body)
-  });
-
-  let data;
   try {
-    data = await res.json();
+    const res = await fetch(API_URL, {
+      method: "POST",
+      redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.status !== "ok") throw new Error(data.error || "ERROR");
+    return data;
   } catch (e) {
-    throw new Error("NETWORK/CORS: Cannot read response. Check Deploy access + API_URL /exec");
+    throw new Error("ការតភ្ជាប់មានបញ្ហា! សូមពិនិត្យមើល API URL ឬសិទ្ធិចូលប្រើប្រាស់។");
   }
-
-  if (data.status !== "ok") throw new Error(data.error || "ERROR");
-  return data;
 }
 
-function isAdmin(){ return session.role === "admin"; }
+function isAdmin() { return session.role === "admin"; }
 
 function persistSession(s) {
   session = { ...session, ...s };
@@ -76,76 +85,82 @@ function persistSession(s) {
   localStorage.setItem("displayName", session.displayName || "");
 }
 
-function clearSession(){
-  session = { token:"", role:"", displayName:"" };
-  localStorage.removeItem("token");
-  localStorage.removeItem("role");
-  localStorage.removeItem("displayName");
+function clearSession() {
+  session = { token: "", role: "", displayName: "" };
+  localStorage.clear();
 }
 
-function renderRole(){
-  $("roleBadge").textContent = isAdmin() ? "Role: Admin (Edit Enabled)" : "Role: User (View Only)";
-  $("accountRole").textContent = isAdmin() ? "Admin" : "User";
+function renderRole() {
+  const badge = $("roleBadge");
+  const accRole = $("accountRole");
+  if (badge) badge.textContent = isAdmin() ? "តួនាទី: Admin (អាចកែសម្រួល)" : "តួនាទី: User (មើលតែប៉ុណ្ណោះ)";
+  if (accRole) accRole.textContent = isAdmin() ? "Admin" : "User";
   $("btnAdd").classList.toggle("hidden", !isAdmin());
 }
 
-function escapeHtml(s){
+function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
   }[m]));
 }
 
-function matchesSearch(values, q){
+function matchesSearch(values, q) {
   if (!q) return true;
   const hay = values.map(v => String(v ?? "")).join(" ").toLowerCase();
   return hay.includes(q.toLowerCase());
 }
 
+// បង្ហាញទិន្នន័យក្នុងតារាង
 function renderTable() {
   const { headers, rows } = cached;
   const q = $("searchInput").value.trim();
 
   const headCells = headers.map(h => `<th>${escapeHtml(h)}</th>`).join("");
-  const actionsTh = isAdmin() ? `<th class="actionsCell">Actions</th>` : "";
+  const actionsTh = isAdmin() ? `<th class="actionsCell">សកម្មភាព</th>` : "";
   $("tableHead").innerHTML = `<tr>${headCells}${actionsTh}</tr>`;
 
   const filtered = rows.filter(r => matchesSearch(r.values, q));
-  $("stats").textContent = `Rows: ${filtered.length} / ${rows.length}`;
+  $("stats").textContent = `បង្ហាញ ${filtered.length} / ${rows.length}`;
 
   const body = filtered.map(r => {
     const tds = r.values.map(v => `<td>${escapeHtml(v)}</td>`).join("");
     const actions = isAdmin()
       ? `<td class="actionsCell">
-          <button class="btn" data-edit="${r.rowNumber}">Edit</button>
+          <button class="btn" onclick="openEditModal(${r.rowNumber})">កែសម្រួល</button>
         </td>`
       : "";
     return `<tr>${tds}${actions}</tr>`;
   }).join("");
 
-  $("tableBody").innerHTML = body || `<tr><td colspan="${headers.length + (isAdmin()?1:0)}" class="muted">No data</td></tr>`;
+  $("tableBody").innerHTML = body || `<tr><td colspan="${headers.length + (isAdmin() ? 1 : 0)}" class="muted">មិនមានទិន្នន័យឡើយ</td></tr>`;
 }
 
-async function loadData(){
-  setMsg($("homeMsg"), "Loading...", "");
-  try{
+// មុខងារសកលសម្រាប់ហៅពី HTML
+window.openEditModal = (rowNumber) => {
+  const row = cached.rows.find(r => r.rowNumber === rowNumber);
+  if (row) openModal({ mode: "edit", rowNumber, values: row.values });
+};
+
+async function loadData() {
+  setMsg($("homeMsg"), "កំពុងទាញយកទិន្នន័យ...", "");
+  try {
     const res = await api("getData");
     cached = res.data;
     renderRole();
     renderTable();
-    setMsg($("homeMsg"), "Updated ✅", "ok");
-  }catch(err){
-    setMsg($("homeMsg"), `Error: ${err.message}`, "error");
+    setMsg($("homeMsg"), "បានធ្វើបច្ចុប្បន្នភាព ✅", "ok");
+  } catch (err) {
+    setMsg($("homeMsg"), `កំហុស: ${err.message}`, "error");
   }
 }
 
-function openModal({ mode, rowNumber, values }){
+// បើកផ្ទាំង Modal (Add/Edit)
+function openModal({ mode, rowNumber, values }) {
   $("modal").classList.remove("hidden");
   setMsg($("modalMsg"), "", "");
   $("btnDelete").classList.toggle("hidden", mode !== "edit");
-  $("modalTitle").textContent = mode === "add" ? "Add Row" : "Edit Row";
-  $("modalSubtitle").textContent = mode === "add"
-    ? "បន្ថែមទិន្នន័យថ្មី"
-    : `កែទិន្នន័យ (row: ${rowNumber})`;
+  $("modalTitle").textContent = mode === "add" ? "បន្ថែមជួរថ្មី" : "កែសម្រួលទិន្នន័យ";
+  $("modalSubtitle").textContent = mode === "add" ? "សូមបញ្ចូលព័ត៌មានខាងក្រោម" : `កែប្រែទិន្នន័យជួរទី: ${rowNumber}`;
 
   const { headers } = cached;
   const form = $("rowForm");
@@ -163,45 +178,45 @@ function openModal({ mode, rowNumber, values }){
     const inputs = Array.from(form.querySelectorAll("input"));
     const newValues = inputs.map(inp => inp.value);
 
-    setMsg($("modalMsg"), "Saving...", "");
-    try{
+    setMsg($("modalMsg"), "កំពុងរក្សាទុក...", "");
+    try {
       if (mode === "add") {
         await api("addRow", { values: newValues });
       } else {
         await api("updateRow", { rowNumber, values: newValues });
       }
-      setMsg($("modalMsg"), "Saved ✅", "ok");
+      setMsg($("modalMsg"), "រក្សាទុកជោគជ័យ ✅", "ok");
       await loadData();
-      setTimeout(() => $("modal").classList.add("hidden"), 500);
-    }catch(err){
-      setMsg($("modalMsg"), `Error: ${err.message}`, "error");
+      setTimeout(closeModal, 600);
+    } catch (err) {
+      setMsg($("modalMsg"), `កំហុស: ${err.message}`, "error");
     }
   };
 
   $("btnDelete").onclick = async () => {
-    if (!confirm("Delete this row?")) return;
-    setMsg($("modalMsg"), "Deleting...", "");
-    try{
+    if (!confirm("តើអ្នកប្រាកដថាចង់លុបទិន្នន័យនេះមែនទេ?")) return;
+    setMsg($("modalMsg"), "កំពុងលុប...", "");
+    try {
       await api("deleteRow", { rowNumber });
-      setMsg($("modalMsg"), "Deleted ✅", "ok");
+      setMsg($("modalMsg"), "លុបបានជោគជ័យ ✅", "ok");
       await loadData();
-      setTimeout(() => $("modal").classList.add("hidden"), 500);
-    }catch(err){
-      setMsg($("modalMsg"), `Error: ${err.message}`, "error");
+      setTimeout(closeModal, 600);
+    } catch (err) {
+      setMsg($("modalMsg"), `កំហុស: ${err.message}`, "error");
     }
   };
 }
 
-function closeModal(){
+function closeModal() {
   $("modal").classList.add("hidden");
 }
 
-// Events
+// ព្រឹត្តិការណ៍ (Events)
 $("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  setMsg($("loginMsg"), "Logging in...", "");
+  setMsg($("loginMsg"), "កំពុងផ្ទៀងផ្ទាត់...", "");
 
-  try{
+  try {
     const username = $("username").value.trim();
     const password = $("password").value;
 
@@ -212,8 +227,8 @@ $("loginForm").addEventListener("submit", async (e) => {
     show("viewHome");
     setNavActive("home");
     await loadData();
-  }catch(err){
-    setMsg($("loginMsg"), `Login failed: ${err.message}`, "error");
+  } catch (err) {
+    setMsg($("loginMsg"), `ការចូលប្រើប្រាស់បរាជ័យ: ${err.message}`, "error");
   }
 });
 
@@ -221,26 +236,14 @@ $("btnLogout").addEventListener("click", () => {
   clearSession();
   cached = { headers: [], rows: [] };
   show("viewLogin");
-  setMsg($("loginMsg"), "Logged out.", "ok");
+  setMsg($("loginMsg"), "បានចាកចេញដោយជោគជ័យ។", "ok");
 });
 
 $("btnRefresh").addEventListener("click", loadData);
-
 $("searchInput").addEventListener("input", () => renderTable());
-
-$("tableBody").addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-edit]");
-  if (!btn) return;
-  const rowNumber = Number(btn.dataset.edit);
-  const row = cached.rows.find(r => r.rowNumber === rowNumber);
-  if (!row) return;
-  openModal({ mode:"edit", rowNumber, values: row.values });
-});
-
 $("btnAdd").addEventListener("click", () => {
-  openModal({ mode:"add", rowNumber:null, values: Array(cached.headers.length).fill("") });
+  openModal({ mode: "add", rowNumber: null, values: Array(cached.headers.length).fill("") });
 });
-
 $("btnCloseModal").addEventListener("click", closeModal);
 $("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeModal(); });
 
@@ -248,7 +251,6 @@ document.querySelectorAll(".navBtn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const go = btn.dataset.go;
     setNavActive(go);
-
     if (go === "home") {
       show("viewHome");
       if (!cached.headers.length) await loadData();
@@ -259,7 +261,7 @@ document.querySelectorAll(".navBtn").forEach(btn => {
   });
 });
 
-// PWA
+// PWA Service Worker
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
@@ -279,22 +281,20 @@ $("btnInstall").addEventListener("click", async () => {
   $("btnInstall").classList.add("hidden");
 });
 
-// Init
-(async function init(){
+// ចាប់ផ្តើមកម្មវិធី (Initialization)
+(async function init() {
   showSplash();
-
   const loggedIn = !!session.token;
+  
   if (!loggedIn) {
     show("viewLogin");
-    hideSplash();
+    setTimeout(hideSplash, 800);
     return;
   }
 
   show("viewHome");
   setNavActive("home");
   renderRole();
-
   await loadData();
-  hideSplash();
+  setTimeout(hideSplash, 800);
 })();
-
