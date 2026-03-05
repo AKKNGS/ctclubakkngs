@@ -2,7 +2,6 @@
  * Frontend for Vercel
  ***********************/
 
-// 1) PUT your Apps Script Web App URL here:
 const API_URL = "https://script.google.com/macros/s/AKfycbxCYfcCKkP4aK53dikRLFqv43ELokP3WkmIL8ruxCPQTyVz9gDNZCcszizEah8fVc2Y/exec";
 
 const $ = (id) => document.getElementById(id);
@@ -37,11 +36,19 @@ function setNavActive(which){
   document.querySelector(`.navBtn[data-go="${which}"]`)?.classList.add("active");
 }
 
+function hideSplash(){
+  const s = $("splash");
+  if (s) s.classList.add("hide");
+}
+function showSplash(){
+  const s = $("splash");
+  if (s) s.classList.remove("hide");
+}
+
 async function api(action, payload = {}) {
   const body = { action, ...payload };
   if (session.token) body.token = session.token;
 
-  // IMPORTANT: avoid redirect issues
   const res = await fetch(API_URL, {
     method: "POST",
     redirect: "follow",
@@ -49,7 +56,6 @@ async function api(action, payload = {}) {
     body: JSON.stringify(body)
   });
 
-  // If blocked by CORS or network, this line throws:
   let data;
   try {
     data = await res.json();
@@ -99,12 +105,10 @@ function renderTable() {
   const { headers, rows } = cached;
   const q = $("searchInput").value.trim();
 
-  // Head
   const headCells = headers.map(h => `<th>${escapeHtml(h)}</th>`).join("");
   const actionsTh = isAdmin() ? `<th class="actionsCell">Actions</th>` : "";
   $("tableHead").innerHTML = `<tr>${headCells}${actionsTh}</tr>`;
 
-  // Body
   const filtered = rows.filter(r => matchesSearch(r.values, q));
   $("stats").textContent = `Rows: ${filtered.length} / ${rows.length}`;
 
@@ -168,7 +172,7 @@ function openModal({ mode, rowNumber, values }){
       }
       setMsg($("modalMsg"), "Saved ✅", "ok");
       await loadData();
-      closeModalSoon();
+      setTimeout(() => $("modal").classList.add("hidden"), 500);
     }catch(err){
       setMsg($("modalMsg"), `Error: ${err.message}`, "error");
     }
@@ -181,15 +185,11 @@ function openModal({ mode, rowNumber, values }){
       await api("deleteRow", { rowNumber });
       setMsg($("modalMsg"), "Deleted ✅", "ok");
       await loadData();
-      closeModalSoon();
+      setTimeout(() => $("modal").classList.add("hidden"), 500);
     }catch(err){
       setMsg($("modalMsg"), `Error: ${err.message}`, "error");
     }
   };
-}
-
-function closeModalSoon(){
-  setTimeout(() => $("modal").classList.add("hidden"), 500);
 }
 
 function closeModal(){
@@ -244,7 +244,6 @@ $("btnAdd").addEventListener("click", () => {
 $("btnCloseModal").addEventListener("click", closeModal);
 $("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeModal(); });
 
-// Bottom nav
 document.querySelectorAll(".navBtn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const go = btn.dataset.go;
@@ -260,10 +259,10 @@ document.querySelectorAll(".navBtn").forEach(btn => {
   });
 });
 
-// PWA: service worker + install prompt
+// PWA
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/public/sw.js").catch(() => {});
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
   });
 }
 
@@ -279,15 +278,6 @@ $("btnInstall").addEventListener("click", async () => {
   deferredPrompt = null;
   $("btnInstall").classList.add("hidden");
 });
-
-function hideSplash(){
-  const s = document.getElementById("splash");
-  if (s) s.classList.add("hide");
-}
-function showSplash(){
-  const s = document.getElementById("splash");
-  if (s) s.classList.remove("hide");
-}
 
 // Init
 (async function init(){
@@ -307,7 +297,3 @@ function showSplash(){
   await loadData();
   hideSplash();
 })();
-
-
-
-
