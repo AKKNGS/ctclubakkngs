@@ -1,61 +1,87 @@
-// ដូរ URL នេះជាមួយ Web App URL ដែលអ្នកបាន Deploy ពី Google Apps Script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyX__TvTzq0cyrVnV7MTHwOz_0kigHULkjZPb3MpUyFy75f-EEAil5r6CS8cV3YPC4y/exec';
+const SCRIPT_URL = 'សូមដាក់_WEB_APP_URL_របស់អ្នកនៅទីនេះ'; 
+let isAdmin = false; // បិទសិទ្ធិ Admin ជា Default
+let studentData = [];
 
-// ការចុះឈ្មោះ Service Worker សម្រាប់ PWA
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-    .then(() => console.log("Service Worker Registered"));
+// ទាញយកទិន្នន័យពេលបើក App ភ្លាម
+document.addEventListener('DOMContentLoaded', loadData);
+
+async function loadData() {
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('student-list').innerHTML = '';
+    try {
+        const response = await fetch(SCRIPT_URL);
+        studentData = await response.json();
+        renderData();
+    } catch (e) {
+        document.getElementById('loading').innerHTML = '<span class="material-symbols-outlined">error</span> មានបញ្ហាក្នុងការទាញទិន្នន័យ';
+    }
 }
 
-// មុខងារ Login (ឧទាហរណ៍សាមញ្ញ)
+function renderData() {
+    const list = document.getElementById('student-list');
+    list.innerHTML = '';
+    document.getElementById('loading').style.display = 'none';
+
+    studentData.forEach(row => {
+        // កាត់ចោលជួរ (Rows) ណាដែលគ្មានឈ្មោះ ដើម្បីកុំឱ្យលោតផ្ទាំងទទេដូចក្នុងរូបរបស់អ្នក
+        if (!row['ឈ្មោះ'] || row['ឈ្មោះ'].trim() === "") return; 
+
+        const card = document.createElement('div');
+        card.className = 'student-card';
+        
+        let html = `
+            <div class="student-info">
+                <h3>${row['លរ']}. ${row['ឈ្មោះ']}</h3>
+                <p>ថ្នាក់: <b>${row['ថ្នាក់']}</b> | ភេទ: <b>${row['ភេទ']}</b></p>
+                <p class="note">${row['កំណត់សម្គាល់']}</p>
+            </div>
+        `;
+
+        // បង្ហាញប៊ូតុងកែប្រែ លុះត្រាតែបាន Login រួច
+        if (isAdmin) {
+            html += `
+                <button class="edit-action-btn" onclick="openEditModal('${row['លរ']}', '${row['ឈ្មោះ']}', '${row['ភេទ']}', '${row['ថ្នាក់']}', '${row['កំណត់សម្គាល់']}')">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">edit</span> កែប្រែ
+                </button>
+            `;
+        }
+
+        card.innerHTML = html;
+        list.appendChild(card);
+    });
+}
+
+// ------ មុខងារគ្រប់គ្រងគណនី (Login) ------
+function toggleLoginModal() {
+    if (isAdmin) {
+        // បើមានសិទ្ធិហើយ ចុចប៊ូតុងម្តងទៀតគឺ Logout
+        isAdmin = false;
+        document.getElementById('auth-icon').innerText = 'login';
+        renderData(); // Render ថ្មីដើម្បីលាក់ប៊ូតុងកែប្រែ
+    } else {
+        document.getElementById('login-modal').style.display = 'flex';
+    }
+}
+
 function login() {
     const user = document.getElementById('username').value;
     const pass = document.getElementById('password').value;
     
     if (user === 'admin' && pass === '1234') {
-        document.getElementById('login-container').classList.remove('active');
-        document.getElementById('dashboard-container').classList.add('active');
-        loadData();
+        isAdmin = true;
+        document.getElementById('auth-icon').innerText = 'logout'; // ប្តូរ Icon ទៅ Logout
+        document.getElementById('login-modal').style.display = 'none';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('login-error').innerText = '';
+        renderData(); // Render ថ្មីដើម្បីបង្ហាញប៊ូតុងកែប្រែ
     } else {
-        document.getElementById('login-error').innerText = "ឈ្មោះគណនី ឬ លេខសម្ងាត់មិនត្រឹមត្រូវ!";
+        document.getElementById('login-error').innerText = "ឈ្មោះ ឬ លេខសម្ងាត់ខុស!";
     }
 }
 
-function logout() {
-    document.getElementById('dashboard-container').classList.remove('active');
-    document.getElementById('login-container').classList.add('active');
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-}
-
-// ទាញយកទិន្នន័យពី Google Sheet
-async function loadData() {
-    document.getElementById('loading').style.display = 'block';
-    const response = await fetch(SCRIPT_URL);
-    const data = await response.json();
-    
-    const tbody = document.getElementById('table-body');
-    tbody.innerHTML = '';
-    
-    data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${row['លរ']}</td>
-            <td>${row['ឈ្មោះ']}</td>
-            <td>${row['ភេទ']}</td>
-            <td>${row['ថ្នាក់']}</td>
-            <td>${row['កំណត់សម្គាល់']}</td>
-            <td>
-                <button class="edit-btn" onclick="openModal('${row['លរ']}', '${row['ឈ្មោះ']}', '${row['ភេទ']}', '${row['ថ្នាក់']}', '${row['កំណត់សម្គាល់']}')">កែប្រែ</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-    document.getElementById('loading').style.display = 'none';
-}
-
-// បើកផ្ទាំងកែប្រែ
-function openModal(id, name, gender, className, note) {
+// ------ មុខងារកែប្រែ (Edit) ------
+function openEditModal(id, name, gender, className, note) {
     document.getElementById('edit-id').value = id;
     document.getElementById('edit-name').value = name;
     document.getElementById('edit-gender').value = gender;
@@ -64,38 +90,26 @@ function openModal(id, name, gender, className, note) {
     document.getElementById('edit-modal').style.display = 'flex';
 }
 
-function closeModal() {
+function closeEditModal() {
     document.getElementById('edit-modal').style.display = 'none';
 }
 
-// រក្សាទុកទិន្នន័យត្រឡប់ទៅ Google Sheet វិញ
 async function saveData() {
     const btn = document.querySelector('.save-btn');
     btn.innerText = "កំពុងរក្សាទុក...";
     
-    const id = document.getElementById('edit-id').value;
-    const name = document.getElementById('edit-name').value;
-    const gender = document.getElementById('edit-gender').value;
-    const className = document.getElementById('edit-class').value;
-    const note = document.getElementById('edit-note').value;
-
     const formData = new URLSearchParams();
     formData.append('action', 'update');
-    formData.append('id', id);
-    formData.append('name', name);
-    formData.append('gender', gender);
-    formData.append('className', className);
-    formData.append('note', note);
+    formData.append('id', document.getElementById('edit-id').value);
+    formData.append('name', document.getElementById('edit-name').value);
+    formData.append('gender', document.getElementById('edit-gender').value);
+    formData.append('className', document.getElementById('edit-class').value);
+    formData.append('note', document.getElementById('edit-note').value);
 
     try {
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: formData,
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        });
-        
-        closeModal();
-        loadData(); // ទាញយកទិន្នន័យថ្មីក្រោយពេល Update 
+        await fetch(SCRIPT_URL, { method: 'POST', body: formData });
+        closeEditModal();
+        loadData(); // ទាញទិន្នន័យថ្មី
     } catch (e) {
         alert('មានបញ្ហាក្នុងការរក្សាទុកទិន្នន័យ');
     }
