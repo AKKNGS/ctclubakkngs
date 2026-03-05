@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'សូមដាក់_WEB_APP_URL_របស់អ្នកនៅទីនេះ'; 
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyX__TvTzq0cyrVnV7MTHwOz_0kigHULkjZPb3MpUyFy75f-EEAil5r6CS8cV3YPC4y/exec'; 
 let isAdmin = false; // បិទសិទ្ធិ Admin ជា Default
 let studentData = [];
 
@@ -115,3 +115,4 @@ async function saveData() {
     }
     btn.innerText = "រក្សាទុក";
 }
+
