@@ -297,3 +297,4 @@ $("btnInstall").addEventListener("click", async () => {
   await loadData();
   hideSplash();
 })();
+
