@@ -38,19 +38,25 @@ function setNavActive(which){
 }
 
 async function api(action, payload = {}) {
-  // We use no-cors fallback behavior by sending JSON and reading response normally.
-  // If your deployment returns readable JSON, this works in most cases.
   const body = { action, ...payload };
   if (session.token) body.token = session.token;
 
+  // IMPORTANT: avoid redirect issues
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    redirect: "follow",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(body)
   });
 
-  const data = await res.json().catch(() => null);
-  if (!data) throw new Error("NETWORK_OR_CORS_ERROR");
+  // If blocked by CORS or network, this line throws:
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error("NETWORK/CORS: Cannot read response. Check Deploy access + API_URL /exec");
+  }
+
   if (data.status !== "ok") throw new Error(data.error || "ERROR");
   return data;
 }
@@ -286,4 +292,5 @@ $("btnInstall").addEventListener("click", async () => {
   renderRole();
   await loadData();
 })();
+
 
