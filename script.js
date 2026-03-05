@@ -280,18 +280,34 @@ $("btnInstall").addEventListener("click", async () => {
   $("btnInstall").classList.add("hidden");
 });
 
+function hideSplash(){
+  const s = document.getElementById("splash");
+  if (s) s.classList.add("hide");
+}
+function showSplash(){
+  const s = document.getElementById("splash");
+  if (s) s.classList.remove("hide");
+}
+
 // Init
 (async function init(){
+  showSplash();
+
   const loggedIn = !!session.token;
   if (!loggedIn) {
     show("viewLogin");
+    hideSplash();
     return;
   }
+
   show("viewHome");
   setNavActive("home");
   renderRole();
+
   await loadData();
+  hideSplash();
 })();
+
 
 
 
