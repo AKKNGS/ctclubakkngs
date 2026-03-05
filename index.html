@@ -1,77 +1,161 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="km">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ប្រព័ន្ធគ្រប់គ្រងសិស្ស</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CT Club Data</title>
+
+  <link rel="manifest" href="/public/manifest.json">
+  <meta name="theme-color" content="#111827">
+  <link rel="icon" href="/public/logo.png">
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-    <header class="app-header">
-        <div class="logo-title">
-            <span class="material-symbols-outlined">school</span>
-            <h1>បញ្ជីសិស្ស</h1>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="logo" src="/public/logo.png" alt="logo" />
+        <div class="brandText">
+          <div class="brandTitle">CT Club</div>
+          <div class="brandSub">Google Sheet WebApp • Admin edit / User view</div>
         </div>
-        <button id="auth-btn" class="icon-btn" onclick="toggleLoginModal()">
-            <span class="material-symbols-outlined" id="auth-icon">login</span>
-        </button>
+      </div>
+      <div class="topActions">
+        <button id="btnInstall" class="btn ghost hidden">Install</button>
+        <button id="btnLogout" class="btn danger hidden">Logout</button>
+      </div>
     </header>
 
-    <main class="app-content">
-        <div id="loading" class="loading">
-            <span class="material-symbols-outlined spin">sync</span> កំពុងទាញយកទិន្នន័យ...
+    <!-- LOGIN -->
+    <main id="viewLogin" class="view">
+      <section class="card authCard">
+        <h1 class="h1">Login</h1>
+        <p class="muted">Admin អាចកែទិន្នន័យ • User មើលបានប៉ុណ្ណោះ</p>
+
+        <form id="loginForm" class="form">
+          <label class="field">
+            <span>Username</span>
+            <input id="username" autocomplete="username" required />
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input id="password" type="password" autocomplete="current-password" required />
+          </label>
+
+          <button class="btn primary" type="submit">Login</button>
+          <div id="loginMsg" class="msg"></div>
+        </form>
+
+        <div class="tips">
+          <div class="pill">PWA</div>
+          <div class="pill">Mobile + PC Responsive</div>
+          <div class="pill">Auto Sync Google Sheet</div>
         </div>
-        
-        <div id="student-list" class="card-list"></div>
+      </section>
     </main>
 
-    <div id="login-modal" class="modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>ចូលប្រើប្រាស់ (Admin)</h2>
-                <button class="close-btn" onclick="toggleLoginModal()"><span class="material-symbols-outlined">close</span></button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <span class="material-symbols-outlined">person</span>
-                    <input type="text" id="username" placeholder="ឈ្មោះគណនី">
-                </div>
-                <div class="input-group">
-                    <span class="material-symbols-outlined">lock</span>
-                    <input type="password" id="password" placeholder="លេខសម្ងាត់">
-                </div>
-                <p id="login-error" class="error-msg"></p>
-                <button class="primary-btn" onclick="login()">ចូល (Login)</button>
-            </div>
-        </div>
-    </div>
+    <!-- HOME -->
+    <main id="viewHome" class="view hidden">
+      <section class="card">
+        <div class="row between gap">
+          <div>
+            <h2 class="h2">Home</h2>
+            <div id="roleBadge" class="badge"></div>
+          </div>
 
-    <div id="edit-modal" class="modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>កែប្រែព័ត៌មាន</h2>
-                <button class="close-btn" onclick="closeEditModal()"><span class="material-symbols-outlined">close</span></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="edit-id">
-                <div class="input-box"><label>ឈ្មោះ៖</label><input type="text" id="edit-name"></div>
-                <div class="input-box"><label>ភេទ៖</label><input type="text" id="edit-gender"></div>
-                <div class="input-box"><label>ថ្នាក់៖</label><input type="text" id="edit-class"></div>
-                <div class="input-box"><label>កំណត់សម្គាល់៖</label><input type="text" id="edit-note"></div>
-                
-                <div class="modal-actions">
-                    <button class="cancel-btn" onclick="closeEditModal()">បោះបង់</button>
-                    <button class="save-btn" onclick="saveData()">រក្សាទុក</button>
-                </div>
-            </div>
+          <div class="row gap">
+            <button id="btnRefresh" class="btn">Refresh</button>
+            <button id="btnAdd" class="btn primary hidden">Add Row</button>
+          </div>
         </div>
-    </div>
 
-    <script src="script.js"></script>
+        <div class="row gap wrap">
+          <div class="search">
+            <input id="searchInput" placeholder="ស្វែងរក..." />
+          </div>
+          <div class="muted small" id="stats"></div>
+        </div>
+
+        <div class="tableWrap">
+          <table id="dataTable" class="table">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div id="homeMsg" class="msg"></div>
+      </section>
+    </main>
+
+    <!-- ACCOUNT -->
+    <main id="viewAccount" class="view hidden">
+      <section class="card">
+        <h2 class="h2">គណនី</h2>
+
+        <div class="profile">
+          <div class="avatar">CT</div>
+          <div>
+            <div class="name">ព័ត៌មានផ្ទាល់ខ្លួន</div>
+            <div class="muted">Creator & Contact</div>
+          </div>
+        </div>
+
+        <div class="infoGrid">
+          <div class="infoItem">
+            <div class="k">ឈ្មោះអ្នកបង្កើត</div>
+            <div class="v">ហម ម៉ាលីនដា</div>
+          </div>
+          <div class="infoItem">
+            <div class="k">លេខទូរសព្ទ</div>
+            <div class="v"><a href="tel:017751115">017 751 115</a></div>
+          </div>
+          <div class="infoItem">
+            <div class="k">Telegram</div>
+            <div class="v"><a target="_blank" rel="noreferrer" href="https://t.me/MalindaHorm">t.me/MalindaHorm</a></div>
+          </div>
+          <div class="infoItem">
+            <div class="k">Role</div>
+            <div class="v" id="accountRole">-</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav id="bottomNav" class="bottomNav hidden">
+      <button class="navBtn active" data-go="home">
+        <span class="ico">⌂</span><span>Home</span>
+      </button>
+      <button class="navBtn" data-go="account">
+        <span class="ico">👤</span><span>គណនី</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL (Admin edit/add) -->
+  <div id="modal" class="modal hidden">
+    <div class="modalCard">
+      <div class="row between gap">
+        <div>
+          <div id="modalTitle" class="h3">Edit</div>
+          <div class="muted small" id="modalSubtitle"></div>
+        </div>
+        <button id="btnCloseModal" class="btn ghost">✕</button>
+      </div>
+
+      <form id="rowForm" class="form"></form>
+
+      <div class="row gap right wrap">
+        <button id="btnDelete" type="button" class="btn danger hidden">Delete</button>
+        <button id="btnSave" type="button" class="btn primary">Save</button>
+      </div>
+
+      <div id="modalMsg" class="msg"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
